@@ -3,3 +3,11 @@
 ################################################################################
 
 /.vs
+/VersionUsingHeader/bin/Debug/netcoreapp2.0
+/VersionUsingHeader/obj
+/VersionUsingMediaType/bin/Debug/netcoreapp2.0
+/VersionUsingMediaType/obj
+/VersionUsingQueryParameter/bin/Debug/netcoreapp2.0
+/VersionUsingQueryParameter/obj
+/VersionUsingUrl/bin/Debug/netcoreapp2.0
+/VersionUsingUrl/obj
