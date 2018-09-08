@@ -1,3 +1,6 @@
+https://github.com/Microsoft/aspnet-api-versioning/wiki/API-Documentation#aspnet-core
+
+
 https://neelbhatt.com/2018/04/21/api-versioning-in-net-core/
 
 // other options not covered in above

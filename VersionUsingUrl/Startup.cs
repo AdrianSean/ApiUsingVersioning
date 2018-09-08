@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Configuration;
@@ -22,9 +23,9 @@ namespace VersionUsingUrl
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(c =>
-               c.Conventions.Add(new ApiExplorerGroupPerVersionConvention()) //  need this to ensure swagger maps to correct action
-           );
+            // format the version as "'v'major[.minor][-status]"
+            services.AddMvc();
+            services.AddMvcCore().AddVersionedApiExplorer(o => o.GroupNameFormat = "'v'VVV");
 
             services.AddApiVersioning(o =>
             {
@@ -42,40 +43,41 @@ namespace VersionUsingUrl
                 o.Conventions.Controller<Controllers.v3.ValuesController>().HasApiVersion(new ApiVersion(3, 0));
             });
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new Info { Title = "Web API", Version = "v1" });               
-            });
-        }   
-    
+            services.AddSwaggerGen(
+             options =>
+             {
+                 var provider = services.BuildServiceProvider()
+                              .GetRequiredService<IApiVersionDescriptionProvider>();
+
+                 foreach (var description in provider.ApiVersionDescriptions)
+                 {
+                     options.SwaggerDoc(
+                     description.GroupName,
+                       new Info()
+                       {
+                           Title = $"Sample API {description.ApiVersion}",
+                           Version = description.ApiVersion.ToString()
+                       });
+                 }
+             });
+        }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IApiVersionDescriptionProvider provider)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
             app.UseMvc();
-
             app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web API");                
-            });
-        }
-    }
-
-
-    public class ApiExplorerGroupPerVersionConvention : IControllerModelConvention
-    {
-        public void Apply(ControllerModel controller)
-        {
-            var controllerNamespace = controller.ControllerType.Namespace; // e.g. "Controllers.v1"
-            var apiVersion = controllerNamespace.Split('.').Last().ToLower();
-
-            controller.ApiExplorer.GroupName = apiVersion;
+            app.UseSwaggerUI(
+                options =>
+                {
+                    foreach (var description in provider.ApiVersionDescriptions)
+                    {
+                        options.SwaggerEndpoint(
+                            $"/swagger/{description.GroupName}/swagger.json",
+                            description.GroupName.ToUpperInvariant());
+                    }
+                });
         }
     }
 }
