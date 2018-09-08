@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using VersionUsingHeader.Models.v1;
 
 namespace VersionUsingHeader.Controllers.v1
-{        
+{
     [Route("api/[controller]")]    
     public class ValuesController : Controller
     {

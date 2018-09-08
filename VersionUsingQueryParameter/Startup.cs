@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Swashbuckle.AspNetCore.Swagger;
+using System.Linq;
 
 namespace VersionUsingQueryParameter
 {
@@ -18,7 +21,15 @@ namespace VersionUsingQueryParameter
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc(c =>
+               c.Conventions.Add(new ApiExplorerGroupPerVersionConvention()) //  need this to ensure swagger maps to correct action
+           );
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = "Web API", Version = "v1" });                             
+            });
+
             services.AddApiVersioning(o =>
             {
                 o.ReportApiVersions = true;
@@ -30,6 +41,7 @@ namespace VersionUsingQueryParameter
                     .HasApiVersion(new ApiVersion(1, 0)).HasDeprecatedApiVersion(new ApiVersion(1, 0));
 
                 o.Conventions.Controller<Controllers.v2.ValuesController>().HasApiVersion(new ApiVersion(2, 0));
+
                 o.Conventions.Controller<Controllers.v3.ValuesController>().HasApiVersion(new ApiVersion(3, 0));
             });
         }
@@ -43,6 +55,23 @@ namespace VersionUsingQueryParameter
             }
 
             app.UseMvc();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web API v1");                
+            });
+        }
+    }
+
+    public class ApiExplorerGroupPerVersionConvention : IControllerModelConvention
+    {
+        public void Apply(ControllerModel controller)
+        {
+            var controllerNamespace = controller.ControllerType.Namespace; // e.g. "Controllers.v1"
+            var apiVersion = controllerNamespace.Split('.').Last().ToLower();
+
+            controller.ApiExplorer.GroupName = apiVersion;
         }
     }
 }

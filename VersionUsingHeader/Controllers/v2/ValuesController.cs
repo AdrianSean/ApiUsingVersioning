@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using VersionUsingHeader.Models.v2;
 
 namespace VersionUsingHeader.Controllers.v2
-{    
-    [Route("api/[controller]")]      
+{
+    [Route("api/[controller]")]    
     public class ValuesController : Controller
     {
         // GET api/values
